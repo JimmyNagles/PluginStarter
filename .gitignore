@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.DS_Store
+.env
+venv/
+result.json
+result.zip
+mock_uploads/
+mock_datahub.py
+trigger_task_test.py
