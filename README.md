@@ -223,9 +223,80 @@ In the DataHub dashboard:
     *   **Config JS URL** → hosted `frontend/index.js`
 3.  Save
 
-## Summary
 
-If you remember one thing:
 
-**All DataHub plugins share the same core.**
-**You only write the job logic.**
+## Analogy file by file
+
+How Your Plugin Works: The "File-by-File" Journey
+
+
+run_task.py
+ seems simple, but it is the star of the show.
+
+Here is the exact journey of a single task, from the moment DataHub calls you, to the moment you say "Done".
+
+Step 1: The Doorway (
+backend/app.py
+)
+This is your Server. It is always listening.
+
+What it does: It receives the POST /create_task from DataHub.
+Analogy: The Receptionist.
+Code:
+@app.route('/create_task') # "Someone is knocking!"
+Step 2: The Manager (
+backend/routes/create_task.py
+)
+This is the Supervisor. It takes the request from the Receptionist and organizes the work.
+
+What it does:
+Checks if this task ID is already running (Idempotency).
+Creates a private folder for this task (/tmp/datahub/task-123).
+Spawns a Background Thread so we can reply "OK" to DataHub immediately.
+Calls 
+run_task.py
+.
+Analogy: The Project Manager who assigns the work and handles the paperwork.
+Step 3: The Worker (
+backend/execution/run_task.py
+)
+This is YOU. This is the only code you theoretically need to write.
+
+Does it do anything? YES! It does the actual job.
+The Contract:
+Input: Takes 
+config
+ (e.g. {"keyword": "cats"}).
+Action: Scrapes web, processes data, generates images (yours currently just sleeps 2s and writes dummy data, but this is where the magic would be).
+Output: It MUST write a file called result.json to its folder.
+Code:
+def run_task(sid, config, work_dir):
+    # 1. Do work (Simulated by sleep)
+    time.sleep(2)
+    
+    # 2. Write Result
+    with open(f"{work_dir}/result.json", "w") as f:
+         json.dump(..., f)
+Analogy: The Specialist who sits in a room, does the work, puts the result in a box, and leaves.
+Step 4: The Messenger (
+backend/datahub/client.py
+)
+This is the Courier.
+
+What it does:
+Update Status: Tells DataHub "We are Running!".
+Upload: Takes the result.json box from 
+run_task.py
+ and uploads it to the Cloud.
+Report: Tells DataHub "Task Complete! Here is the file URL."
+Analogy: The Fedex Driver who delivers the package back to headquarters.
+Summary
+app.py
+ answers the phone.
+create_task.py
+ sets up the desk and hires the worker.
+run_task.py
+ (You) does the work and writes result.json.
+client.py
+ mails the result back.
+

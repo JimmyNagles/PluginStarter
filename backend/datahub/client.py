@@ -50,9 +50,22 @@ class DatahubClient:
         POST /api/task/update_status
         """
         print(f"[DataHub] Updating status for {subtask_id} to {status} (Progress: {progress})")
+        
+        # Map string status to integer codes
+        status_map = {
+            "RUNNING": 1,
+            "PAUSED": 2,
+            "COMPLETED": 3,
+            "CANCELLED": 4,
+            "FAILED": 5
+        }
+        
+        # Use mapped integer or fallback to original if already int
+        status_code = status_map.get(status, status)
+        
         payload = {
             "subtask_id": subtask_id,
-            "status": status
+            "status": status_code
         }
         if progress is not None:
             payload["progress"] = progress
@@ -79,8 +92,8 @@ class DatahubClient:
         """
         payload = {
             "subtask_id": subtask_id,
-            "filename": filename,
-            "filesize": filesize
+            "file_name": filename, # Fixed key from filename
+            "file_size": filesize  # Fixed key from filesize
         }
         if chunk_size:
             payload["chunk_size"] = chunk_size
@@ -98,7 +111,7 @@ class DatahubClient:
         payload = {
             "upload_id": upload_id,
             "subtask_id": subtask_id,
-            "filename": filename,
+            "file_name": filename, # Fixed key from filename
             "parts": parts
         }
         resp = self._post("/api/task/upload/complete", payload)

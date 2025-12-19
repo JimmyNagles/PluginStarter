@@ -8,3 +8,4 @@ result.zip
 mock_uploads/
 mock_datahub.py
 trigger_task_test.py
+backend/.env
