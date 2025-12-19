@@ -4,10 +4,16 @@ from routes.create_task import create_task_bp
 from routes.manage_task import manage_task_bp
 
 app = Flask(__name__)
+
+# Load environment variables
+from dotenv import load_dotenv
+import os
+load_dotenv()
+
 # Load config
-app.config['PLUGIN_SECRET'] = 'as-83a51f676f014778bb081b97ed716460'
-app.config['DATAHUB_API_URL'] = 'http://43.134.209.46' # Updated to identified worker IP
-app.config['PLUGIN_API_KEY'] = 'ak-64c82d1634cb4a52'
+app.config['PLUGIN_SECRET'] = os.environ.get('PLUGIN_SECRET')
+app.config['DATAHUB_API_URL'] = os.environ.get('DATAHUB_API_URL') 
+app.config['PLUGIN_API_KEY'] = os.environ.get('PLUGIN_API_KEY')
 
 @app.before_request
 def log_request_info():
@@ -51,6 +57,15 @@ def log_response_info(response):
 app.register_blueprint(health_bp)
 app.register_blueprint(create_task_bp)
 app.register_blueprint(manage_task_bp)
+
+@app.route('/frontend/index.js')
+def serve_frontend_js():
+    from flask import send_from_directory
+    import os
+    # Assuming frontend is one level up from backend/app.py
+    # app.py is in backend/, frontend/ is in root/frontend/
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return send_from_directory(os.path.join(root_dir, 'frontend'), 'index.js')
 
 if __name__ == '__main__':
     print("Starting backend app on port 5002...")
